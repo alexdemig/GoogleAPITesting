@@ -20,11 +20,18 @@ class ExcelGatherer():
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         credentials = ServiceAccountCredentials.from_json_keyfile_name(self.file_location, scope)
         self.client = gspread.authorize(credentials)
+        # print(self.client.list_spreadsheet_files())
 
     def SetAndOpenSpreadsheet(self, spreadsheet_title):
-        self.sheet_title = spreadsheet_title
+        self.spreadsheet_title = spreadsheet_title
         try:
-            self.sheet = self.client.open(self.sheet_title).sheet1
+            spreadsheet = self.client.open(self.spreadsheet_title)
+            self.sheet = spreadsheet.get_worksheet(0)
+
+            # testing:
+            # self.worksheets_list = spreadsheet.worksheets()
+            # print(type(self.worksheets_list)
+            # self.sheet = spreadsheet.worksheet(self.worksheets_list[0])
         except gspread.exceptions.SpreadsheetNotFound:
                 print("No spreadsheet found")
 
@@ -54,3 +61,5 @@ if __name__ == "__main__":
     objName.GetHeaders()
     dictio = objName.GetColumns()
     print(len(dictio))
+
+    # print(objName.list_spreadsheet_files())
