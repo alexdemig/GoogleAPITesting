@@ -5,10 +5,6 @@ In this file we will implement methods for communication with a google docs spre
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# this section will be cleaned up in a final version, as of right now, it is highly personalized
-file_location = 'ProyectoPrueba.json'  # This is a json that stores my access keys to the spreadsheet
-spreadsheet_title = "DATA"  # This is my temporary Google spreadsheet name
-
 
 class ExcelGatherer():
     """This object will contain all methods interacting with google spreadsheets, given credentials"""
@@ -21,19 +17,29 @@ class ExcelGatherer():
         credentials = ServiceAccountCredentials.from_json_keyfile_name(self.file_location, scope)
         self.client = gspread.authorize(credentials)
         # print(self.client.list_spreadsheet_files())
+        # print(self.client.list_spreadsheet_files()[0]['name'])
 
-    def SetAndOpenSpreadsheet(self, spreadsheet_title):
-        self.spreadsheet_title = spreadsheet_title
+        # list_spreadsheet_files gets a list of a dict that contains misc. information, including the spreadsheet we have access to
+        # the implementation is ugly, but the only way to interact with the Gspread API to extract the spreadsheet name
+        self.spreadsheet_title = self.client.list_spreadsheet_files()[0]['name']
         try:
-            spreadsheet = self.client.open(self.spreadsheet_title)
-            self.sheet = spreadsheet.get_worksheet(0)
-
+            self.spreadsheet = self.client.open(self.spreadsheet_title)
+            # Sets the worksheet as the first one by default
+            self.sheet = self.spreadsheet.get_worksheet(0)
+            print("success")
             # testing:
             # self.worksheets_list = spreadsheet.worksheets()
             # print(type(self.worksheets_list)
             # self.sheet = spreadsheet.worksheet(self.worksheets_list[0])
         except gspread.exceptions.SpreadsheetNotFound:
-                print("No spreadsheet found")
+                print("No spreadsheet named {self.spreadsheet_title} found\n")
+
+    def GetWorksheets(self):
+        self.worksheets_list = self.spreadsheet.worksheets()
+        return self.worksheets_list
+
+    def SetCurrentWorksheet(self, worksheet_to_be_used):
+        self.sheet = self.spreadsheet.worksheet(worksheet_to_be_used)
 
     def GetHeaders(self):
         self.col_headers = self.sheet.row_values(1)
@@ -56,10 +62,9 @@ class ExcelGatherer():
 # Using the object:
 
 if __name__ == "__main__":
-    objName = ExcelGatherer(file_location=file_location)
-    objName.SetAndOpenSpreadsheet(spreadsheet_title)
+    objName = ExcelGatherer('ProyectoPrueba.json')
     objName.GetHeaders()
     dictio = objName.GetColumns()
-    print(len(dictio))
+    print(type(dictio['ID']))
 
     # print(objName.list_spreadsheet_files())
